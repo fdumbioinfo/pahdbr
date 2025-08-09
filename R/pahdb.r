@@ -35,9 +35,9 @@
 pahdb <- function(
     symbollist = NULL, foldchange = NULL, keywords = NULL, species = "hs",
     background = 25000, overlapmin = 2, top = 50, labsize = 11, dpibarplot = "screen",
-    dolistnetwork = TRUE, dogenesetnetwork = FALSE, confidence = c(0,150,400,500,600,700,800,900,seq(950,990,10)),
-    intmaxdh = 5000, intmax = 100000, nodesize = 0.39,
-    dotopgo = FALSE, ipafile = NULL, nodegraph = c(5,10), path = "." , dirname = NULL )
+    dolistnetwork = TRUE, dogenesetnetwork = FALSE, confidence = 0,
+    intmaxdh = 6000, intmax = 10000000, nodesize = 0.39,
+    dotopgo = TRUE, ipafile = NULL, nodegraph = c(5,10), path = "." , dirname = NULL )
 {
   i=1
   ifelse( is.null(dirname), "ena" -> DirName0, paste("ena_",dirname,sep="") -> DirName0 )
