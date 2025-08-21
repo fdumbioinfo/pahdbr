@@ -21,7 +21,7 @@
 #' @importFrom foreach foreach %do% %:%
 #' @importFrom utils capture.output
 #' @export
-menaf2 <- function(
+msigdbenaf2 <- function(
     list1 = NULL, list2 = NULL, addlist = NULL, listnames = NULL,
     species = "hs", top = 50, collection= "reactome",
     dirname = NULL, path = ".")
@@ -29,7 +29,7 @@ menaf2 <- function(
   i=j=1
   if(is.null(listnames)){ c("list1","list2","addlist") -> listnames }
   paste(listnames[1],"x",listnames[2],sep="") -> DirName0
-  ifelse(is.null(dirname),paste("ena2_",DirName0,sep="") -> DirName1,paste("ena2_",dirname,sep="") -> DirName1 )
+  ifelse(is.null(dirname),paste("msigdbenaf2_",DirName0,sep="") -> DirName1,paste("msigdbenaf2_",dirname,sep="") -> DirName1 )
   path %>% file.path(DirName1) -> Path0
   if(!dir.exists(Path0)){ Path0 %>% dir.create }
   # addlist = NULL
@@ -122,9 +122,21 @@ menaf2 <- function(
   #
   # gmt
   #
-  Path0 %>% file.path("gmt") %>% dir.create
+  moalannotgene::genesetdb -> Genesetdb0
+  Genesetdb0 %>% names %>% grep(collection,.) %>% Genesetdb0[.] %>% unlist(recursive = F) -> Genesetdb1
+  # Genesetdb1 %>% length
+  # Genesetdb1 %>% names
+  # Genesetdb1 %>% head
+  # Genesetdb1[[1]]
+  Genesetdb1 %>% lapply("[",1) %>% unlist -> GeneSetName0
+  Genesetdb1 %>% lapply("[",4) -> GeneSetList0
+  # GeneSetList0 %>% head
+  # GeneSetName0 %>% head
+  # GeneSetName0 %>% length
+  Path0 %>% file.path("gmt") %>% dir.create 
   # create C1_NMDARxPAH-KB_152 gmt file
   # "NMDARxPAH-KB/C1_NMDARxPAH-KB_152.tsv" %>% moal::input(.) -> l0
+  #
   paste(DirName0,"_",length(i2),".gmt",sep="") -> gmtFileName
   paste(DirName0,"_",length(i2),sep="") -> gmtName
   Path0 %>% file.path("gmt",gmtFileName) %>% file("w") -> f
@@ -138,10 +150,11 @@ menaf2 <- function(
       l0[i] %>% basename %>% sub("(.*).tsv","\\1",.) %>% paste(".gmt",sep="") -> FileName
       Path0 %>% file.path("gmt",FileName) %>% file("w") -> f
       l0[i] %>% moal::input(.) -> ll0
-      ll0
       foreach(j=1:nrow(ll0)) %do%
         {
-          ll0[j,2] %>% strsplit("\\|") %>% unlist %>% paste0(collapse="\t" ) -> t
+          GeneSetName0 %>% grep(ll0[j,1],.) %>% GeneSetList0[.] %>% unlist %>% moal::annot(.) %>% dplyr::select(Symbol) %>%
+            unlist %>% strsplit("\\|") %>% unlist %>% paste0(collapse="\t" ) -> t
+          # ll0[j,2] %>% strsplit("\\|") %>% unlist %>% paste0(collapse="\t" ) -> t
           paste(ll0[j,1],"\t",ll0[j,1],"\t",t,"\n",sep="") %>% writeLines(f,sep="") 
         }
       close(f)
