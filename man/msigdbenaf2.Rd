@@ -11,7 +11,7 @@ msigdbenaf2(
   listnames = NULL,
   species = "hs",
   top = 50,
-  collection = "reactome",
+  collection = NULL,
   dirname = NULL,
   path = "."
 )
