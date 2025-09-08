@@ -12,6 +12,7 @@ msigdbenaf2(
   species = "hs",
   top = 50,
   collection = NULL,
+  intmaxdh = 5000,
   dirname = NULL,
   path = "."
 )
@@ -30,6 +31,8 @@ msigdbenaf2(
 \item{top}{numeric number of top patways to extract}
 
 \item{collection}{character MSigDB collection name to extract top pathways}
+
+\item{intmaxdh}{numeric maximum number of interaction to use for Davidson and Harel algorithm layout}
 
 \item{dirname}{character output directory name}
 

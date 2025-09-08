@@ -7,6 +7,7 @@
 #' @param species character hs mm rn dr ss
 #' @param collection character MSigDB collection name to extract top pathways
 #' @param top numeric number of top patways to extract
+#' @param intmaxdh numeric maximum number of interaction to use for Davidson and Harel algorithm layout
 #' @param dirname character output directory name
 #' @param path character path
 #' @return directory
@@ -23,7 +24,7 @@
 #' @export
 msigdbenaf2 <- function(
     list1 = NULL, list2 = NULL, addlist = NULL, listnames = NULL,
-    species = "hs", top = 50, collection=NULL, 
+    species = "hs", top = 50, collection = NULL, intmaxdh = 5000,
     dirname = NULL, path = ".")
 {
   i=j=1
@@ -48,11 +49,13 @@ msigdbenaf2 <- function(
     if(!is.null(i2)){ c(i2,addlist) %>% unique -> i2 }else{addlist %>% unique -> i2}
   }
   # output overlap (with addlist if not NULL)
+  FALSE -> OVERLAP 
   if(length(i2)>0)
   { 
     i2 %>% moal::annot(species=species) -> a0
     paste(DirName0,"_",length(i2),".tsv",sep="") -> FileNamei
     a0 %>% moal::output(Path0 %>% file.path(FileNamei))
+    TRUE -> OVERLAP
   }
   #
   # ORA
@@ -64,7 +67,7 @@ msigdbenaf2 <- function(
     paste(listnames[1],"_",length(list1),sep="") -> DirNamel1
     # data.frame(Symbol=list1,FC=rep(5,length(list1))) -> foldchange
     # list1 %>% pahdb(foldchange=foldchange,species=species,top=top,dirname=DirNamel1,path=Path0,dotopgo=F)
-    list1 %>% moal::ena(species=species,topdeg=length(list1),layout=layout,dirname=DirNamel1,path=Path0)
+    list1 %>% moal::ena(species=species,topdeg=length(list1),layout=layout,intmaxdh=intmaxdh,dirname=DirNamel1,path=Path0)
   }
   # list1 ORA
   if(length(list2)>0)
@@ -73,22 +76,18 @@ msigdbenaf2 <- function(
     paste(listnames[2],"_",length(list2),sep="") -> DirNamel2
     # data.frame(Symbol=list2,FC=rep(5,length(list2))) -> foldchange
     # list2 %>% pahdb(foldchange=foldchange,species=species,top=top,dirname=DirNamel2,path=Path0,dotopgo=F)
-    list2 %>% moal::ena(species=species,topdeg=length(list2),layout=layout,dirname=DirNamel2,path=Path0)
-  }
-  # overlap list ORA
-  if(!is.null(i2))
-  { 
-    if(length(i2)>200){ 1 -> layout }else{ 2 -> layout }
-    paste(DirName0,"_",length(i2),sep="") -> DirNamei2
-    # data.frame(Symbol=i2,FC=rep(5,length(i2))) -> foldchange
-    # i2 %>% pahdb(foldchange=foldchange,species=species,top=top,dirname=DirNamei2,path=Path0,dotopgo=F)
-    i2 %>% moal::ena(species=species,topdeg=length(i2),layout=layout,dirname=DirNamei2,path=DirName1)
+    list2 %>% moal::ena(species=species,topdeg=length(list2),layout=layout,intmaxdh=intmaxdh,dirname=DirNamel2,path=Path0)
   }
   #
   # if overlap or addlist not NULL
   #
-  if(!is.null(i2))
+  if(OVERLAP)
   {
+    # ORA overlap
+    if(length(i2)>200){ 1 -> layout }else{ 2 -> layout }
+    paste(DirName0,"_",length(i2),sep="") -> DirNamei2
+    i2 %>% moal::ena(species=species,topdeg=length(i2),layout=layout,intmaxdh=intmaxdh,dirname=DirNamei2,path=Path0)
+    #
     Path0 %>% list.files(full.names=T,recursive=T) -> lp0
     # list1
     p0 <- foreach(i=1:length(collection),.combine = "rbind") %do%
@@ -96,7 +95,8 @@ msigdbenaf2 <- function(
         lp0 %>% grep(collection[i],.,ignore.case=T) %>% lp0[.] -> lp1
         lp1 %>% basename %>% grep(".*.tsv$",.) %>% lp1[.] -> lp2
         paste("_",listnames[1],"_",sep="") -> Grep0
-        lp2 %>% grep(Grep0,.) %>% lp2[.] %>% moal::input(.) %>% dplyr::slice(1:top)
+        lp2 %>% grep(Grep0,.) %>% lp2[.] -> lp3
+        lp3 %>% moal::input(.) %>% dplyr::slice(1:top)
       }
     # list2
     pp0 <- foreach(i=1:length(collection),.combine = "rbind") %do%
@@ -104,7 +104,8 @@ msigdbenaf2 <- function(
         lp0 %>% grep(collection[i],.,ignore.case=T) %>% lp0[.] -> lp1
         lp1 %>% basename %>% grep(".*.tsv$",.) %>% lp1[.] -> lp2
         paste("_",listnames[2],"_",sep="") -> Grep0
-        lp2 %>% grep(Grep0,.) %>% lp2[.] %>% moal::input(.) %>% dplyr::slice(1:top)
+        lp2 %>% grep(Grep0,.) %>% lp2[.] -> lp3
+        lp3 %>% moal::input(.) %>% dplyr::slice(1:top)
       }
     # addlist
     ppp0 <- foreach(i=1:length(collection),.combine = "rbind") %do%
@@ -112,7 +113,8 @@ msigdbenaf2 <- function(
         lp0 %>% grep(collection[i],.,ignore.case=T) %>% lp0[.] -> lp1
         lp1 %>% basename %>% grep(".*.tsv$",.) %>% lp1[.] -> lp2
         paste("_",DirName0,"_",sep="") -> Grep0
-        lp2 %>% grep(Grep0,.) %>% lp2[.] %>% moal::input(.) %>% dplyr::slice(1:top)
+        lp2 %>% grep(Grep0,.) %>% lp2[.] -> lp3
+        lp3 %>% moal::input(.) %>% dplyr::slice(1:top)
       }
     # p0 %>% grep(collection,.,ignore.case=T) %>% p0[.] -> p1
     # p1 %>% grep("top.*.tsv$",.) %>% p1[.] -> p2
@@ -129,23 +131,32 @@ msigdbenaf2 <- function(
     c(DirName0,listnames[1],listnames[2]) -> listnamesP
     list(ppp0$Name,p0$Name,pp0$Name) %>% moal::venn(listnames=listnamesP,dirname=DirNameP,path=Path0,export=T)
     #
-    # p0 %>% setNames(c("Name",paste(colnames(p0)[-1],listnames[1],sep=""))) -> p1
-    # pp0 %>% setNames(c("Name",paste(colnames(pp0)[-1],listnames[2],sep=""))) -> pp1
-    # ppp0 %>% setNames(c("Name",paste(colnames(pp0)[-1],DirName0,sep=""))) -> ppp1
-    paste("top",(50),"_",Collection0,"_",DirName0,"_",length(i2),"_",nrow(ppp0),".tsv",sep="") -> FileNameppp1
-    ppp0 %>% output(Path0 %>% file.path(FileNameppp1))
+    foreach(i=1:length(collection)) %do%
+      {
+        lp0 %>% grep(collection[i],.,ignore.case=T) %>% lp0[.] -> lp1
+        lp1 %>% basename %>% grep(".*.tsv$",.) %>% lp1[.] -> lp2
+        paste("_",DirName0,"_",sep="") -> Grep0
+        lp2 %>% grep(Grep0,.) %>% lp2[.] -> lp3
+        lp3 %>% moal::input(.) %>% dplyr::slice(1:top) -> lp4
+        paste("top",top,"_",collection[i],"_",DirName0,"_",length(i2),"_",nrow(lp4),".tsv",sep="") -> FileNameppp1
+        lp4 %>% output(Path0 %>% file.path(FileNameppp1))
+      }
     #
-    # Path0 %>% list.files(full.names = T) %>% grep("venn3_pathways_",.,value=T) %>%
-    #   list.files(full.names = T) %>% grep(".tsv$",.,value=T) -> v0
-    # tt <- foreach(i=1:length(v0)) %do% { v0[i] %>% input -> t ; t$rowID }
-    # tt %>% unlist %>% unique %>% data.frame(Name=.) %>% left_join(ppp1) %>% left_join(pp1) %>% left_join(p1) -> pAll
-    # # add annotation to canonical pathway lists
-    # foreach(i=1:length(v0)) %do%
-    #   {
-    #     v0[i] %>% input %>% setNames(c("Name")) %>% inner_join(pAll) -> t
-    #     t %>% apply(2,is.na) %>% apply(2,all) %>% "!"(.) %>% which %>% dplyr::select(t,.) -> tt
-    #     tt %>% output(v0[i])
-    #   }
+    # add annotation
+    p0 %>% setNames(c("Name",paste(colnames(p0)[-1],listnames[1],sep=""))) -> p1
+    pp0 %>% setNames(c("Name",paste(colnames(pp0)[-1],listnames[2],sep=""))) -> pp1
+    ppp0 %>% setNames(c("Name",paste(colnames(pp0)[-1],DirName0,sep=""))) -> ppp1
+    Path0 %>% list.files(full.names = T) %>% grep("venn3_pathways_",.,value=T) %>%
+      list.files(full.names = T) %>% grep(".tsv$",.,value=T) -> v0
+    tt <- foreach(i=1:length(v0)) %do% { v0[i] %>% input -> t ; t$rowID }
+    tt %>% unlist %>% unique %>% data.frame(Name=.) %>% left_join(ppp1) %>% left_join(pp1) %>% left_join(p1) -> pAll
+    # add annotation to canonical pathway lists
+    foreach(i=1:length(v0)) %do%
+      {
+        v0[i] %>% input %>% setNames(c("Name")) %>% inner_join(pAll) -> t
+        t %>% apply(2,is.na) %>% apply(2,all) %>% "!"(.) %>% which %>% dplyr::select(t,.) -> tt
+        tt %>% output(v0[i])
+      }
     #
     # top pathways
     #
@@ -158,6 +169,7 @@ msigdbenaf2 <- function(
     #
     # gmt
     #
+    Path0 %>% file.path("gmt") %>% dir.create
     moalannotgene::genesetdb -> Genesetdb0
     # Genesetdb0 %>% names %>% grep(collection,.,ignore.case=T) %>% Genesetdb0[.] %>% unlist(recursive = F) -> Genesetdb1
     Genesetdb1 <- foreach(i=1:length(collection),.combine = "c") %do%
@@ -179,20 +191,48 @@ msigdbenaf2 <- function(
     # "NMDARxPAH-KB/C1_NMDARxPAH-KB_152.tsv" %>% moal::input(.) -> l0
     #
     # paste(DirName0,"_",length(i2),".gmt",sep="") -> gmtFileName
-    paste("top",top,"_",Collection0,"_",DirName0,"_",length(i2),"_",nrow(ppp0),".gmt",sep="") -> gmtFileName
+    # gmt overlap
+    paste("top",top,"_",DirName0,"_",length(i2),".gmt",sep="") -> gmtFileName
     paste(DirName0,"_",length(i2),sep="") -> gmtName
     # Path0 %>% file.path("gmt",gmtFileName) %>% file("w") -> f
-    Path0 %>% file.path(gmtFileName) %>% file("w") -> f
+    Path0 %>% file.path("gmt",gmtFileName) %>% file("w") -> f
     i2 %>% strsplit("\\|") %>% unlist %>% paste0(collapse="\t" ) -> t
     paste(gmtName,"\t",gmtName,"\t",t,"\n",sep="") %>% writeLines(f,sep="") 
-    foreach(j=1:nrow(ppp0)) %do%
-      {
-        GeneSetName0 %>% grep(ppp0[j,1],.) %>% GeneSetList0[.] %>% unlist %>% moal::annot(.) %>% dplyr::select(Symbol) %>%
-          unlist %>% strsplit("\\|") %>% unlist %>% paste0(collapse="\t" ) -> t
-        # ll0[j,2] %>% strsplit("\\|") %>% unlist %>% paste0(collapse="\t" ) -> t
-        paste(ppp0[j,1],"\t",ppp0[j,1],"\t",t,"\n",sep="") %>% writeLines(f,sep="") 
-      }
     close(f)
+    # gmt by collection
+    foreach(i=1:length(collection)) %do%
+      {
+        lp0 %>% grep(collection[i],.,ignore.case=T) %>% lp0[.] -> lp1
+        lp1 %>% basename %>% grep(".*.tsv$",.) %>% lp1[.] -> lp2
+        paste("_",DirName0,"_",sep="") -> Grep0
+        lp2 %>% grep(Grep0,.) %>% lp2[.] -> lp3
+        lp3 %>% moal::input(.) %>% dplyr::slice(1:top) -> lp4
+        paste("top",top,"_",collection[i],"_",DirName0,"_",length(i2),"_",nrow(ppp0),".gmt",sep="") -> gmtFileName
+        paste(DirName0,"_",length(i2),sep="") -> gmtName
+        # Path0 %>% file.path("gmt",gmtFileName) %>% file("w") -> f
+        Path0 %>% file.path("gmt",gmtFileName) %>% file("w") -> f
+        # i2 %>% strsplit("\\|") %>% unlist %>% paste0(collapse="\t" ) -> t
+        # paste(gmtName,"\t",gmtName,"\t",t,"\n",sep="") %>% writeLines(f,sep="")
+        ppp0
+        foreach(j=1:nrow(lp4)) %do%
+          {
+            GeneSetName0 %>% grep(lp4[j,1],.) %>% GeneSetList0[.] %>% unlist %>% moal::annot(.) %>% dplyr::select(Symbol) %>%
+              unlist %>% strsplit("\\|") %>% unlist %>% paste0(collapse="\t" ) -> t
+            # ll0[j,2] %>% strsplit("\\|") %>% unlist %>% paste0(collapse="\t" ) -> t
+            paste(lp4[j,1],"\t",lp4[j,1],"\t",t,"\n",sep="") %>% writeLines(f,sep="") 
+          }
+        close(f)
+        
+      }
+    
+    
+    
+    
+    
+    
+    
+    
+    
     # create top pathways gmt files
     # Path0 %>% file.path(DirNameTP) %>% list.files(full.names = T) -> l0
     # foreach(i=1:length(l0)) %do%
