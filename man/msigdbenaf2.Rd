@@ -13,6 +13,9 @@ msigdbenaf2(
   top = 50,
   collection = NULL,
   intmaxdh = 5000,
+  mings = 5,
+  maxgs = 500,
+  overlapmin = 2,
   dirname = NULL,
   path = "."
 )
@@ -33,6 +36,12 @@ msigdbenaf2(
 \item{collection}{character MSigDB collection name to extract top pathways}
 
 \item{intmaxdh}{numeric maximum number of interaction to use for Davidson and Harel algorithm layout}
+
+\item{mings}{numeric minimal size of a gene set}
+
+\item{maxgs}{numeric maximal size of a gene set}
+
+\item{overlapmin}{numeric minimal overlap to keep for gene set analysis}
 
 \item{dirname}{character output directory name}
 

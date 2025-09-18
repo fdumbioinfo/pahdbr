@@ -8,6 +8,9 @@
 #' @param collection character MSigDB collection name to extract top pathways
 #' @param top numeric number of top patways to extract
 #' @param intmaxdh numeric maximum number of interaction to use for Davidson and Harel algorithm layout
+#' @param mings numeric minimal size of a gene set
+#' @param maxgs numeric maximal size of a gene set
+#' @param overlapmin numeric minimal overlap to keep for gene set analysis
 #' @param dirname character output directory name
 #' @param path character path
 #' @return directory
@@ -23,8 +26,8 @@
 #' @importFrom utils capture.output
 #' @export
 msigdbenaf2 <- function(
-    list1 = NULL, list2 = NULL, addlist = NULL, listnames = NULL,
-    species = "hs", top = 50, collection = NULL, intmaxdh = 5000,
+    list1 = NULL, list2 = NULL, addlist = NULL, listnames = NULL,species = "hs",
+    top = 50, collection = NULL, intmaxdh = 5000,mings = 5, maxgs = 500, overlapmin = 2,
     dirname = NULL, path = ".")
 {
   i=j=1
@@ -67,7 +70,8 @@ msigdbenaf2 <- function(
     paste(listnames[1],"_",length(list1),sep="") -> DirNamel1
     # data.frame(Symbol=list1,FC=rep(5,length(list1))) -> foldchange
     # list1 %>% pahdb(foldchange=foldchange,species=species,top=top,dirname=DirNamel1,path=Path0,dotopgo=F)
-    list1 %>% moal::ena(species=species,topdeg=length(list1),layout=layout,intmaxdh=intmaxdh,dirname=DirNamel1,path=Path0)
+    list1 %>% moal::ena(species=species,topdeg=length(list1),layout=layout,intmaxdh=intmaxdh,
+                        mings=mings,maxgs=maxgs,overlapmin=overlapmin,dirname=DirNamel1,path=Path0)
   }
   # list1 ORA
   if(length(list2)>0)
@@ -139,7 +143,7 @@ msigdbenaf2 <- function(
         lp2 %>% grep(Grep0,.) %>% lp2[.] -> lp3
         lp3 %>% moal::input(.) %>% dplyr::slice(1:top) -> lp4
         paste("top",top,"_",collection[i],"_",DirName0,"_",length(i2),"_",nrow(lp4),".tsv",sep="") -> FileNameppp1
-        lp4 %>% output(Path0 %>% file.path(FileNameppp1))
+        lp4 %>% moal::output(Path0 %>% file.path(FileNameppp1))
       }
     #
     # add annotation
@@ -155,7 +159,7 @@ msigdbenaf2 <- function(
       {
         v0[i] %>% input %>% setNames(c("Name")) %>% inner_join(pAll) -> t
         t %>% apply(2,is.na) %>% apply(2,all) %>% "!"(.) %>% which %>% dplyr::select(t,.) -> tt
-        tt %>% output(v0[i])
+        tt %>% moal::output(v0[i])
       }
     #
     # top pathways
@@ -171,11 +175,13 @@ msigdbenaf2 <- function(
     #
     Path0 %>% file.path("gmt") %>% dir.create
     moalannotgene::genesetdb -> Genesetdb0
+    Genesetdb0 %>% names
     # Genesetdb0 %>% names %>% grep(collection,.,ignore.case=T) %>% Genesetdb0[.] %>% unlist(recursive = F) -> Genesetdb1
     Genesetdb1 <- foreach(i=1:length(collection),.combine = "c") %do%
       {
         Genesetdb0 %>% names %>% grep(collection[i],.,ignore.case=T) %>% Genesetdb0[.] %>% unlist(recursive=F)
       }
+    Genesetdb1 %>% names
     t %>% length
     # Genesetdb1 %>% length
     # Genesetdb1 %>% names
