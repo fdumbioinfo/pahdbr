@@ -80,7 +80,8 @@ msigdbenaf2 <- function(
     paste(listnames[2],"_",length(list2),sep="") -> DirNamel2
     # data.frame(Symbol=list2,FC=rep(5,length(list2))) -> foldchange
     # list2 %>% pahdb(foldchange=foldchange,species=species,top=top,dirname=DirNamel2,path=Path0,dotopgo=F)
-    list2 %>% moal::ena(species=species,topdeg=length(list2),layout=layout,intmaxdh=intmaxdh,dirname=DirNamel2,path=Path0)
+    list2 %>% moal::ena(species=species,topdeg=length(list2),layout=layout,intmaxdh=intmaxdh,
+                        mings=mings,maxgs=maxgs,overlapmin=overlapmin,dirname=DirNamel2,path=Path0)
   }
   #
   # if overlap or addlist not NULL
@@ -90,7 +91,8 @@ msigdbenaf2 <- function(
     # ORA overlap
     if(length(i2)>200){ 1 -> layout }else{ 2 -> layout }
     paste(DirName0,"_",length(i2),sep="") -> DirNamei2
-    i2 %>% moal::ena(species=species,topdeg=length(i2),layout=layout,intmaxdh=intmaxdh,dirname=DirNamei2,path=Path0)
+    i2 %>% moal::ena(species=species,topdeg=length(i2),layout=layout,intmaxdh=intmaxdh,
+                     mings=mings,maxgs=maxgs,overlapmin=overlapmin,dirname=DirNamei2,path=Path0)
     #
     Path0 %>% list.files(full.names=T,recursive=T) -> lp0
     # list1
