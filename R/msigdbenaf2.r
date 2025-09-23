@@ -73,7 +73,7 @@ msigdbenaf2 <- function(
     list1 %>% moal::ena(species=species,topdeg=length(list1),layout=layout,intmaxdh=intmaxdh,
                         mings=mings,maxgs=maxgs,overlapmin=overlapmin,dirname=DirNamel1,path=Path0)
   }
-  # list1 ORA
+  # list2 ORA
   if(length(list2)>0)
   {
     if(length(list2)>200){ 1 -> layout }else{ 2 -> layout }
