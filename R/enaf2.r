@@ -11,6 +11,7 @@
 #' @param mings numeric minimal size of a gene set
 #' @param maxgs numeric maximal size of a gene set
 #' @param overlapmin numeric minimal overlap to keep for gene set analysis
+#' @param layout numeric for layout neetwork 1 fr by default 2 dh 3 tree 4 circle 5 grid 6 sphere
 #' @param dirname character output directory name
 #' @param path character path
 #' @return directory
@@ -25,9 +26,9 @@
 #' @importFrom foreach foreach %do% %:%
 #' @importFrom utils capture.output
 #' @export
-msigdbenaf2 <- function(
+enaf2 <- function(
     list1 = NULL, list2 = NULL, addlist = NULL, listnames = NULL,species = "hs",
-    top = 50, collection = NULL, intmaxdh = 5000,mings = 5, maxgs = 500, overlapmin = 2,
+    top = 50, collection = NULL, intmaxdh = 5000,mings = 5, maxgs = 500, overlapmin = 2, layout = NULL,
     dirname = NULL, path = ".")
 {
   i=j=1
@@ -66,7 +67,7 @@ msigdbenaf2 <- function(
   # list1 ORA
   if(length(list1)>0)
   {
-    if(length(list1)>200){ 1 -> layout }else{ 2 -> layout }
+    if(is.null(layout)){if(length(list1)>200){ 1 -> layout }else{ 2 -> layout }}
     paste(listnames[1],"_",length(list1),sep="") -> DirNamel1
     # data.frame(Symbol=list1,FC=rep(5,length(list1))) -> foldchange
     # list1 %>% pahdb(foldchange=foldchange,species=species,top=top,dirname=DirNamel1,path=Path0,dotopgo=F)
@@ -76,7 +77,7 @@ msigdbenaf2 <- function(
   # list2 ORA
   if(length(list2)>0)
   {
-    if(length(list2)>200){ 1 -> layout }else{ 2 -> layout }
+    if(is.null(layout)){if(length(list1)>200){ 1 -> layout }else{ 2 -> layout }}
     paste(listnames[2],"_",length(list2),sep="") -> DirNamel2
     # data.frame(Symbol=list2,FC=rep(5,length(list2))) -> foldchange
     # list2 %>% pahdb(foldchange=foldchange,species=species,top=top,dirname=DirNamel2,path=Path0,dotopgo=F)
@@ -89,7 +90,7 @@ msigdbenaf2 <- function(
   if(OVERLAP)
   {
     # ORA overlap
-    if(length(i2)>200){ 1 -> layout }else{ 2 -> layout }
+    if(is.null(layout)){if(length(list1)>200){ 1 -> layout }else{ 2 -> layout }}
     paste(DirName0,"_",length(i2),sep="") -> DirNamei2
     i2 %>% moal::ena(species=species,topdeg=length(i2),layout=layout,intmaxdh=intmaxdh,
                      mings=mings,maxgs=maxgs,overlapmin=overlapmin,dirname=DirNamei2,path=Path0)

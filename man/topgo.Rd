@@ -7,7 +7,7 @@
 topgo(
   symbollist = NULL,
   species = "hs",
-  overlapmin = 2,
+  overlapmin = 1,
   nodegraph = c(5, 10),
   top = 50,
   annot = FALSE,
