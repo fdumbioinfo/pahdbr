@@ -1,9 +1,11 @@
 #' @title ena barplot
 #' @param dat data.frame enrichment analysis results with 3 column
+#' @param datnes data.frame enrichment analysis results with 3 column
 #' @param labsize numeric feature size
 #' @param addratioena logical if TRUE add overlap and geneset size on enrichment barplot
 #' @param addenarankbarplot logical if TRUE add ena barplot ranked by NES score
-#' @param title character 
+#' @param title character
+#' @param subtitle character
 #' @return plot
 #' @examples
 #' # not run
@@ -13,9 +15,14 @@
 #' @importFrom gridExtra grid.arrange
 #' @importFrom stats reorder
 #' @noRd
-enabarplot <- function( dat = NULL, labsize = 7, addratioena = TRUE, addenarankbarplot = TRUE, title = "ena")
+enabarplot <- function( dat = NULL,datnes = NULL, labsize = 7, addratioena = TRUE, addenarankbarplot = TRUE, title = "ena", subtitle = "")
 {
   # barplot
+  
+  
+  
+  
+  
   # fgseapval1plot3 %>% colnames
   dat %>% ggplot( aes(x=Log10Pval,y=.data$Name,fill=.data$NES)) -> p
   p + geom_bar(stat="identity",width = 0.95) -> p
@@ -28,7 +35,8 @@ enabarplot <- function( dat = NULL, labsize = 7, addratioena = TRUE, addenarankb
             axis.text.y = element_text(angle = 0, vjust = 0.4, hjust=1,size = 6)) -> p
   p + labs(x="log10(p-value)",y="Genesets") -> p
   title %>% paste(" (Log10p ranking)",sep="") -> Title0
-  p + ggtitle(Title0) -> p
+  # p + ggtitle(Title0) -> p
+  p + ggtitle(Title0,subtitle=subtitle) -> p
   #
   if(addratioena){p + geom_text(data=dat,aes(label=.data$Overlap),hjust=1.1,size=2) -> p}
   p + theme(plot.title=element_text(size=10,hjust=0.5),
@@ -44,6 +52,7 @@ enabarplot <- function( dat = NULL, labsize = 7, addratioena = TRUE, addenarankb
   p -> p1
   if(addenarankbarplot)
   {
+    if(!is.null(datnes)){ datnes -> dat }
     dat %>% dplyr::mutate(Name=forcats::fct_reorder(.data$Name,abs(.data$NES))) -> dat
     # dat$OverlapSize %>% paste("/",dat$GenesetSize) %>% 
     #   lapply(paste0,collapse="") %>% unlist -> Overlap
@@ -64,7 +73,8 @@ enabarplot <- function( dat = NULL, labsize = 7, addratioena = TRUE, addenarankb
               legend.text=element_text(size = 5)) -> p
     p + labs(x="log10(p-value)",y="Genesets") -> p
     title %>% paste(" (NES ranking)",sep="") -> Title0
-    p + ggtitle(Title0) -> p
+    # p + ggtitle(Title0) -> p
+    p + ggtitle(Title0,subtitle=subtitle) -> p
     p + geom_vline(xintercept=-log10(0.05),color="darkgoldenrod1",size=0.4,linetype="dashed") -> p
     p -> p2
     # gridExtra::grid.arrange( p1, p2, nrow = 1 ) -> p
