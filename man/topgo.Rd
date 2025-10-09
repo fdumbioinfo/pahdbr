@@ -9,7 +9,7 @@ topgo(
   species = "hs",
   overlapmin = 1,
   nodegraph = c(5, 10),
-  top = 50,
+  topena = 50,
   annot = FALSE,
   path = ".",
   dirname = NULL
@@ -24,7 +24,7 @@ topgo(
 
 \item{nodegraph}{numeric number of top GO term to use for GO term nodes graph}
 
-\item{top}{numeric number of GOTerm to display on barplot}
+\item{topena}{numeric number of GOTerm to display on barplot}
 
 \item{annot}{logical if TRUE (by default) annotate list before analysis}
 
@@ -43,7 +43,7 @@ topGO analysis using classic fisher method
 }
 \examples{
 # not run
-# topgo( Symbollist )
+# topgo( symbollist )
 }
 \author{
 Florent Dumont \href{mailto:florent.dumont@univresite-paris-saclay.fr}{florent.dumont@univresite-paris-saclay.fr}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/enaf2.r
 \name{enaf2}
 \alias{enaf2}
-\title{MSigDB Enrichment Analysis For Two list.}
+\title{MSigDB functional analysis for two lists.}
 \usage{
 enaf2(
   list1 = NULL,
@@ -10,7 +10,7 @@ enaf2(
   addlist = NULL,
   listnames = NULL,
   species = "hs",
-  top = 50,
+  topena = 50,
   collection = NULL,
   intmaxdh = 5000,
   mings = 5,
@@ -32,7 +32,7 @@ enaf2(
 
 \item{species}{character hs mm rn dr ss}
 
-\item{top}{numeric number of top patways to extract}
+\item{topena}{numeric number of top patways to extract}
 
 \item{collection}{character MSigDB collection name to extract top pathways}
 

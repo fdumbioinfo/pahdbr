@@ -1,7 +1,7 @@
 #' @title ipa
 #' @description parse and create plot from ipa all enrichment results
 #' @param ipafile character path to the file
-#' @param top numeric top feature to display
+#' @param topena numeric top feature to display
 #' @param labsize numeric feature size 
 #' @param background numeric
 #' @param overlapmin numeric for minimum overlap between geneset and list
@@ -18,7 +18,7 @@
 #' @importFrom rlang .data
 #' @export
 ipa <- function( 
-    ipafile = "", top = 50, labsize = 8 , dpi = "retina",
+    ipafile = "", topena = 50, labsize = 8 , dpi = "retina",
     overlapmin = 2 , enascoremin = 1, background = 25000,
     path = "." , dirname = NULL )
 {
@@ -112,8 +112,8 @@ ipa <- function(
   # Path %>% file.path("Pathways",FileName0) -> FileName1
   # rl6 %>% output(FileName1)
   # barplot
+  # pval ranking
   rl5 %>% colnames
-  50 -> topena
   rl5 %>% dplyr::slice(1:topena) -> fgseapval1plot
   fgseapval1plot %>% colnames
   fgseapval1plot$pval %>% log10 %>% "*"(-1) -> Log10Pval
@@ -132,7 +132,31 @@ ipa <- function(
   fgseapval1plot3$OverlapSize %>% paste("/",fgseapval1plot3$GenesetSize) %>% 
     lapply(paste0,collapse="") %>% unlist -> Overlap
   fgseapval1plot3 %>% data.frame(Overlap) -> fgseapval1plot3
-  fgseapval1plot3 %>% enabarplot(title="Pathways") -> p
+  fgseapval1plot3 -> datp
+  # NES ranking
+  rl5 %>% colnames
+  rl5 %>% dplyr::arrange( -abs(.data$NES) ) %>% dplyr::slice(1:topena) -> fgseapval1plot
+  # rl5 %>% dplyr::slice(1:topena) -> fgseapval1plot
+  fgseapval1plot %>% colnames
+  fgseapval1plot$pval %>% log10 %>% "*"(-1) -> Log10Pval
+  fgseapval1plot %>% data.frame(Log10Pval) -> fgseapval1plot2
+  # reduce long geneset name
+  fgseapval1plot2$Name %>% as.character %>% nchar -> Nchar0
+  Nchar0 %>% ">"(50) %>% which -> selNchar
+  if(length(selNchar)>0)
+  {
+    fgseapval1plot2$Name[selNchar] %>% substr(1,45) -> Head0
+    fgseapval1plot2$Name[selNchar] %>% substr(Nchar0-10,Nchar0)-> Tail0
+    fgseapval1plot2$Name %>% as.character -> NameNchar0
+    fgseapval1plot2$Name[selNchar] <- paste(Head0,Tail0,sep="...")
+  }
+  fgseapval1plot2 %>% dplyr::mutate(Name=forcats::fct_reorder(.data$Name,Log10Pval)) -> fgseapval1plot3
+  fgseapval1plot3$OverlapSize %>% paste("/",fgseapval1plot3$GenesetSize) %>% 
+    lapply(paste0,collapse="") %>% unlist -> Overlap
+  fgseapval1plot3 %>% data.frame(Overlap) -> fgseapval1plot3
+  fgseapval1plot3 -> datnes
+  datnes %>% head
+  datp %>% enabarplot(datnes=datnes,title="Pathways") -> p
   
   # # barplot 
   # fgseapval1plot3 %>% ggplot( aes(x=Log10Pval,y=.data$Name,fill=.data$NES)) -> p
@@ -196,7 +220,7 @@ ipa <- function(
   #   # ggpubr::ggarrange(p1, p2, widths = c(5,5)) -> p
   #   # plot_grid(p1, p2, labels = c('A', 'B'), label_size = 12)
   # }
-  paste("PATHWAYS_",top,".pdf",sep="") -> FileName0
+  paste("PATHWAYS_",topena,".pdf",sep="") -> FileName0
   Path %>% file.path(FileName0) -> FileName1
   ggsave(plot=p,filename=FileName1,width=40,height=30,scale=1,units="cm")
   
@@ -280,7 +304,7 @@ ipa <- function(
   # rl5 %>% dplyr::select(Name, log10pvalFDR, OverlapSize) -> rl6
   # ipabarplotup(dat=rl6, top=top, labsize=labsize) -> p
   # barplot
-  50 -> topena
+  # pval ranking
   rl5 %>% dplyr::slice(1:topena) -> fgseapval1plot
   fgseapval1plot %>% colnames
   fgseapval1plot$pval %>% log10 %>% "*"(-1) -> Log10Pval
@@ -300,9 +324,33 @@ ipa <- function(
     lapply(paste0,collapse="") %>% unlist -> Overlap
   fgseapval1plot3 %>% data.frame(Overlap) -> fgseapval1plot3
   fgseapval1plot3 %>% head
-  fgseapval1plot3 -> dat
-  fgseapval1plot3 %>% enabarplot(title="Regulators") -> p
-  paste("REGULATORS_",top,".pdf",sep="") -> FileName0
+  fgseapval1plot3 -> datp
+  # NES ranking
+  rl5 %>% colnames
+  rl5 %>% dplyr::arrange( -abs(.data$NES) ) %>% dplyr::slice(1:topena) -> fgseapval1plot
+  # rl5 %>% dplyr::slice(1:topena) -> fgseapval1plot
+  fgseapval1plot %>% colnames
+  fgseapval1plot$pval %>% log10 %>% "*"(-1) -> Log10Pval
+  fgseapval1plot %>% data.frame(Log10Pval) -> fgseapval1plot2
+  # reduce long geneset name
+  fgseapval1plot2$Name %>% as.character %>% nchar -> Nchar0
+  Nchar0 %>% ">"(50) %>% which -> selNchar
+  if(length(selNchar)>0)
+  {
+    fgseapval1plot2$Name[selNchar] %>% substr(1,45) -> Head0
+    fgseapval1plot2$Name[selNchar] %>% substr(Nchar0-10,Nchar0)-> Tail0
+    fgseapval1plot2$Name %>% as.character -> NameNchar0
+    fgseapval1plot2$Name[selNchar] <- paste(Head0,Tail0,sep="...")
+  }
+  fgseapval1plot2 %>% dplyr::mutate(Name=forcats::fct_reorder(.data$Name,Log10Pval)) -> fgseapval1plot3
+  fgseapval1plot3$OverlapSize %>% paste("/",fgseapval1plot3$GenesetSize) %>% 
+    lapply(paste0,collapse="") %>% unlist -> Overlap
+  fgseapval1plot3 %>% data.frame(Overlap) -> fgseapval1plot3
+  fgseapval1plot3 -> datnes
+  datnes %>% head
+  datp %>% enabarplot(datnes=datnes,title="Pathways") -> p
+  # fgseapval1plot3 %>% enabarplot(title="Regulators") -> p
+  paste("REGULATORS_",topena,".pdf",sep="") -> FileName0
   Path %>% file.path(FileName0) -> FileName1
   ggsave(filename=FileName1, plot=p, width=12, height=10, dpi="retina")
   # -----
@@ -361,7 +409,7 @@ ipa <- function(
   # barplot
   # rl5 %>% dplyr::select(Name,log10pvalFDR,OverlapSize) -> rl6
   # ipabarplotfun(dat=rl6, top=top, labsize=labsize) -> p
-  50 -> topena
+  # pval ranking
   rl5 %>% dplyr::slice(1:topena) -> fgseapval1plot
   fgseapval1plot %>% colnames
   fgseapval1plot$pval %>% log10 %>% "*"(-1) -> Log10Pval
@@ -381,10 +429,37 @@ ipa <- function(
     lapply(paste0,collapse="") %>% unlist -> Overlap
   fgseapval1plot3 %>% data.frame(Overlap) -> fgseapval1plot3
   fgseapval1plot3 %>% head
-  fgseapval1plot3 -> dat
-  fgseapval1plot3 %>% enabarplot(title="Functions") -> p
+  fgseapval1plot3 -> datp
+  # NES ranking
+  rl5 %>% colnames
+  rl5 %>% dplyr::arrange( -abs(.data$NES) ) %>% dplyr::slice(1:topena) -> fgseapval1plot
+  # rl5 %>% dplyr::slice(1:topena) -> fgseapval1plot
+  fgseapval1plot %>% colnames
+  fgseapval1plot$pval %>% log10 %>% "*"(-1) -> Log10Pval
+  fgseapval1plot %>% data.frame(Log10Pval) -> fgseapval1plot2
+  # reduce long geneset name
+  fgseapval1plot2$Name %>% as.character %>% nchar -> Nchar0
+  Nchar0 %>% ">"(50) %>% which -> selNchar
+  if(length(selNchar)>0)
+  {
+    fgseapval1plot2$Name[selNchar] %>% substr(1,45) -> Head0
+    fgseapval1plot2$Name[selNchar] %>% substr(Nchar0-10,Nchar0)-> Tail0
+    fgseapval1plot2$Name %>% as.character -> NameNchar0
+    fgseapval1plot2$Name[selNchar] <- paste(Head0,Tail0,sep="...")
+  }
+  fgseapval1plot2 %>% dplyr::mutate(Name=forcats::fct_reorder(.data$Name,Log10Pval)) -> fgseapval1plot3
+  fgseapval1plot3$OverlapSize %>% paste("/",fgseapval1plot3$GenesetSize) %>% 
+    lapply(paste0,collapse="") %>% unlist -> Overlap
+  fgseapval1plot3 %>% data.frame(Overlap) -> fgseapval1plot3
+  fgseapval1plot3 -> datnes
+  datnes %>% head
+  datp %>% enabarplot(datnes=datnes,title="Pathways") -> p
+  
+  
+  
+  # fgseapval1plot3 %>% enabarplot(title="Functions") -> p
   # output
-  paste("FUNCTIONS_",top,".pdf",sep="") -> FileName0
+  paste("FUNCTIONS_",topena,".pdf",sep="") -> FileName0
   Path %>% file.path(FileName0) -> FileName1
   ggsave(filename=FileName1, plot=p, width=12, height=10, dpi="retina")
   # -----
@@ -449,8 +524,7 @@ ipa <- function(
   # barplot
   # rl5 %>% dplyr::select(Name,log10pvalFDR,OverlapSize) -> rl6
   # ipabarplottox(dat=rl6, top=top, labsize=labsize) -> p
-  
-  50 -> topena
+  # pval ranking
   rl5 %>% dplyr::slice(1:topena) -> fgseapval1plot
   fgseapval1plot %>% colnames
   fgseapval1plot$pval %>% log10 %>% "*"(-1) -> Log10Pval
@@ -470,8 +544,35 @@ ipa <- function(
     lapply(paste0,collapse="") %>% unlist -> Overlap
   fgseapval1plot3 %>% data.frame(Overlap) -> fgseapval1plot3
   fgseapval1plot3 %>% head
-  fgseapval1plot3 -> dat
-  fgseapval1plot3 %>% enabarplot(title="Diseases") -> p
+  fgseapval1plot3 -> datp
+  # NES ranking
+  rl5 %>% colnames
+  rl5 %>% dplyr::arrange( -abs(.data$NES) ) %>% dplyr::slice(1:topena) -> fgseapval1plot
+  # rl5 %>% dplyr::slice(1:topena) -> fgseapval1plot
+  fgseapval1plot %>% colnames
+  fgseapval1plot$pval %>% log10 %>% "*"(-1) -> Log10Pval
+  fgseapval1plot %>% data.frame(Log10Pval) -> fgseapval1plot2
+  # reduce long geneset name
+  fgseapval1plot2$Name %>% as.character %>% nchar -> Nchar0
+  Nchar0 %>% ">"(50) %>% which -> selNchar
+  if(length(selNchar)>0)
+  {
+    fgseapval1plot2$Name[selNchar] %>% substr(1,45) -> Head0
+    fgseapval1plot2$Name[selNchar] %>% substr(Nchar0-10,Nchar0)-> Tail0
+    fgseapval1plot2$Name %>% as.character -> NameNchar0
+    fgseapval1plot2$Name[selNchar] <- paste(Head0,Tail0,sep="...")
+  }
+  fgseapval1plot2 %>% dplyr::mutate(Name=forcats::fct_reorder(.data$Name,Log10Pval)) -> fgseapval1plot3
+  fgseapval1plot3$OverlapSize %>% paste("/",fgseapval1plot3$GenesetSize) %>% 
+    lapply(paste0,collapse="") %>% unlist -> Overlap
+  fgseapval1plot3 %>% data.frame(Overlap) -> fgseapval1plot3
+  fgseapval1plot3 -> datnes
+  datnes %>% head
+  datnes %>% dim
+  datp %>% enabarplot(datnes=datnes,title="Pathways") -> p
+  
+  
+  # fgseapval1plot3 %>% enabarplot(title="Diseases") -> p
   # output
   paste("DISEASES_",topena,".pdf",sep="") -> FileName0
   Path %>% file.path(FileName0) -> FileName1

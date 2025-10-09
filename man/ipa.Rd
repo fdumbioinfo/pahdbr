@@ -6,7 +6,7 @@
 \usage{
 ipa(
   ipafile = "",
-  top = 50,
+  topena = 50,
   labsize = 8,
   dpi = "retina",
   overlapmin = 2,
@@ -19,7 +19,7 @@ ipa(
 \arguments{
 \item{ipafile}{character path to the file}
 
-\item{top}{numeric top feature to display}
+\item{topena}{numeric top feature to display}
 
 \item{labsize}{numeric feature size}
 

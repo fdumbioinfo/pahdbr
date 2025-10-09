@@ -2,7 +2,7 @@
 % Please edit documentation in R/enabench.r
 \name{enabench}
 \alias{enabench}
-\title{MSigDB enrichment analysis}
+\title{Fonctional analysis benchmark}
 \usage{
 enabench(
   symbollist = NULL,
@@ -11,7 +11,7 @@ enabench(
   species = "hs",
   background = 25000,
   overlapmin = 2,
-  top = 50,
+  topena = 50,
   labsize = 11,
   dpibarplot = "screen",
   dolistnetwork = TRUE,
@@ -42,7 +42,7 @@ enabench(
 
 \item{overlapmin}{numeric for minimum overlap between geneset and list}
 
-\item{top}{numeric top features to plot}
+\item{topena}{numeric top features to plot}
 
 \item{labsize}{numeric size of function in barplot}
 
@@ -82,7 +82,7 @@ MSigDB enrichment analysis
 }
 \examples{
 # not run
-# ena124( Symbollist , filtergeneset = "reactome")
+# enabench(symbollist , dotopgo , ipafile)
 }
 \author{
 Florent Dumont \href{mailto:florent.dumont@universite-paris-saclay.fr}{florent.dumont@universite-paris-saclay.fr}

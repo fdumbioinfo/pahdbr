@@ -1,4 +1,4 @@
-#' @title MSigDB Enrichment Analysis For Two list.
+#' @title MSigDB functional analysis for two lists.
 #' @description MSigDB Enrichment Analysis For Two list
 #' @param list1 character Symbol list 1
 #' @param list2 character Symbol list 2
@@ -6,7 +6,7 @@
 #' @param listnames character vector with 3 list names respectively
 #' @param species character hs mm rn dr ss
 #' @param collection character MSigDB collection name to extract top pathways
-#' @param top numeric number of top patways to extract
+#' @param topena numeric number of top patways to extract
 #' @param intmaxdh numeric maximum number of interaction to use for Davidson and Harel algorithm layout
 #' @param mings numeric minimal size of a gene set
 #' @param maxgs numeric maximal size of a gene set
@@ -25,10 +25,12 @@
 #' @importFrom stats fisher.test setNames p.adjust
 #' @importFrom foreach foreach %do% %:%
 #' @importFrom utils capture.output
+#' @importFrom moal venn input annot ena output
+#' @importFrom moalannotgene genesetdb
 #' @export
 enaf2 <- function(
     list1 = NULL, list2 = NULL, addlist = NULL, listnames = NULL,species = "hs",
-    top = 50, collection = NULL, intmaxdh = 5000,mings = 5, maxgs = 500, overlapmin = 2, layout = NULL,
+    topena = 50, collection = NULL, intmaxdh = 5000,mings = 5, maxgs = 500, overlapmin = 2, layout = NULL,
     dirname = NULL, path = ".")
 {
   i=j=1
@@ -37,7 +39,8 @@ enaf2 <- function(
   if((length(collection) == 1) & collection[1] == "c2"){ c("reactome","kegg","pid","biocarta","cgp","hallmark","kegg") -> collection}
   if(is.null(listnames)){ c("list1","list2","addlist") -> listnames }
   paste(listnames[1],"x",listnames[2],sep="") -> DirName0
-  ifelse(is.null(dirname),paste("msigdbenaf2_",DirName0,sep="") -> DirName1,paste("msigdbenaf2_",dirname,sep="") -> DirName1 )
+  # ifelse(is.null(dirname),paste("msigdbenaf2_",DirName0,sep="") -> DirName1,paste("msigdbenaf2_",dirname,sep="") -> DirName1 )
+  ifelse(is.null(dirname),DirName0 -> DirName1,dirname -> DirName1)
   path %>% file.path(DirName1) -> Path0
   if(!dir.exists(Path0)){ Path0 %>% dir.create }
   # addlist = NULL
@@ -71,7 +74,7 @@ enaf2 <- function(
     paste(listnames[1],"_",length(list1),sep="") -> DirNamel1
     # data.frame(Symbol=list1,FC=rep(5,length(list1))) -> foldchange
     # list1 %>% pahdb(foldchange=foldchange,species=species,top=top,dirname=DirNamel1,path=Path0,dotopgo=F)
-    list1 %>% moal::ena(species=species,topdeg=length(list1),layout=layout,intmaxdh=intmaxdh,
+    list1 %>% moal::ena(species=species,topena=topena,topdeg=length(list1),layout=layout,intmaxdh=intmaxdh,
                         mings=mings,maxgs=maxgs,overlapmin=overlapmin,dirname=DirNamel1,path=Path0)
   }
   # list2 ORA
@@ -81,7 +84,7 @@ enaf2 <- function(
     paste(listnames[2],"_",length(list2),sep="") -> DirNamel2
     # data.frame(Symbol=list2,FC=rep(5,length(list2))) -> foldchange
     # list2 %>% pahdb(foldchange=foldchange,species=species,top=top,dirname=DirNamel2,path=Path0,dotopgo=F)
-    list2 %>% moal::ena(species=species,topdeg=length(list2),layout=layout,intmaxdh=intmaxdh,
+    list2 %>% moal::ena(species=species,topena=topena,topdeg=length(list2),layout=layout,intmaxdh=intmaxdh,
                         mings=mings,maxgs=maxgs,overlapmin=overlapmin,dirname=DirNamel2,path=Path0)
   }
   #
@@ -92,7 +95,7 @@ enaf2 <- function(
     # ORA overlap
     if(is.null(layout)){if(length(list1)>200){ 1 -> layout }else{ 2 -> layout }}
     paste(DirName0,"_",length(i2),sep="") -> DirNamei2
-    i2 %>% moal::ena(species=species,topdeg=length(i2),layout=layout,intmaxdh=intmaxdh,
+    i2 %>% moal::ena(species=species,topena=topena,topdeg=length(i2),layout=layout,intmaxdh=intmaxdh,
                      mings=mings,maxgs=maxgs,overlapmin=overlapmin,dirname=DirNamei2,path=Path0)
     #
     Path0 %>% list.files(full.names=T,recursive=T) -> lp0
@@ -103,7 +106,7 @@ enaf2 <- function(
         lp1 %>% basename %>% grep(".*.tsv$",.) %>% lp1[.] -> lp2
         paste("_",listnames[1],"_",sep="") -> Grep0
         lp2 %>% grep(Grep0,.) %>% lp2[.] -> lp3
-        lp3 %>% moal::input(.) %>% dplyr::slice(1:top)
+        lp3 %>% moal::input(.) %>% dplyr::slice(1:topena)
       }
     # list2
     pp0 <- foreach(i=1:length(collection),.combine = "rbind") %do%
@@ -112,7 +115,7 @@ enaf2 <- function(
         lp1 %>% basename %>% grep(".*.tsv$",.) %>% lp1[.] -> lp2
         paste("_",listnames[2],"_",sep="") -> Grep0
         lp2 %>% grep(Grep0,.) %>% lp2[.] -> lp3
-        lp3 %>% moal::input(.) %>% dplyr::slice(1:top)
+        lp3 %>% moal::input(.) %>% dplyr::slice(1:topena)
       }
     # addlist
     ppp0 <- foreach(i=1:length(collection),.combine = "rbind") %do%
@@ -121,7 +124,7 @@ enaf2 <- function(
         lp1 %>% basename %>% grep(".*.tsv$",.) %>% lp1[.] -> lp2
         paste("_",DirName0,"_",sep="") -> Grep0
         lp2 %>% grep(Grep0,.) %>% lp2[.] -> lp3
-        lp3 %>% moal::input(.) %>% dplyr::slice(1:top)
+        lp3 %>% moal::input(.) %>% dplyr::slice(1:topena)
       }
     # p0 %>% grep(collection,.,ignore.case=T) %>% p0[.] -> p1
     # p1 %>% grep("top.*.tsv$",.) %>% p1[.] -> p2
@@ -144,8 +147,8 @@ enaf2 <- function(
         lp1 %>% basename %>% grep(".*.tsv$",.) %>% lp1[.] -> lp2
         paste("_",DirName0,"_",sep="") -> Grep0
         lp2 %>% grep(Grep0,.) %>% lp2[.] -> lp3
-        lp3 %>% moal::input(.) %>% dplyr::slice(1:top) -> lp4
-        paste("top",top,"_",collection[i],"_",DirName0,"_",length(i2),"_",nrow(lp4),".tsv",sep="") -> FileNameppp1
+        lp3 %>% moal::input(.) %>% dplyr::slice(1:topena) -> lp4
+        paste("top",topena,"_",collection[i],"_",DirName0,"_",length(i2),"_",nrow(lp4),".tsv",sep="") -> FileNameppp1
         lp4 %>% moal::output(Path0 %>% file.path(FileNameppp1))
       }
     #
@@ -201,7 +204,7 @@ enaf2 <- function(
     #
     # paste(DirName0,"_",length(i2),".gmt",sep="") -> gmtFileName
     # gmt overlap
-    paste("top",top,"_",DirName0,"_",length(i2),".gmt",sep="") -> gmtFileName
+    paste("top",topena,"_",DirName0,"_",length(i2),".gmt",sep="") -> gmtFileName
     paste(DirName0,"_",length(i2),sep="") -> gmtName
     # Path0 %>% file.path("gmt",gmtFileName) %>% file("w") -> f
     Path0 %>% file.path("gmt",gmtFileName) %>% file("w") -> f
@@ -215,8 +218,8 @@ enaf2 <- function(
         lp1 %>% basename %>% grep(".*.tsv$",.) %>% lp1[.] -> lp2
         paste("_",DirName0,"_",sep="") -> Grep0
         lp2 %>% grep(Grep0,.) %>% lp2[.] -> lp3
-        lp3 %>% moal::input(.) %>% dplyr::slice(1:top) -> lp4
-        paste("top",top,"_",collection[i],"_",DirName0,"_",length(i2),"_",nrow(ppp0),".gmt",sep="") -> gmtFileName
+        lp3 %>% moal::input(.) %>% dplyr::slice(1:topena) -> lp4
+        paste("top",topena,"_",collection[i],"_",DirName0,"_",length(i2),"_",nrow(ppp0),".gmt",sep="") -> gmtFileName
         paste(DirName0,"_",length(i2),sep="") -> gmtName
         # Path0 %>% file.path("gmt",gmtFileName) %>% file("w") -> f
         Path0 %>% file.path("gmt",gmtFileName) %>% file("w") -> f

@@ -4,7 +4,7 @@
 #' @param species character
 #' @param overlapmin numeric min overlap between Symbol and GO term
 #' @param nodegraph numeric number of top GO term to use for GO term nodes graph
-#' @param top numeric number of GOTerm to display on barplot
+#' @param topena numeric number of GOTerm to display on barplot
 #' @param annot logical if TRUE (by default) annotate list before analysis
 #' @param path character file path
 #' @param dirname character results directory name
@@ -12,7 +12,7 @@
 #' @return directory with barplot and graph node of GO term
 #' @examples
 #' # not run
-#' # topgo( Symbollist )
+#' # topgo( symbollist )
 #' @author Florent Dumont <florent.dumont@univresite-paris-saclay.fr>
 #' @importFrom magrittr %>%
 #' @importFrom dplyr select
@@ -23,12 +23,11 @@
 #' @import AnnotationDbi
 #' @import GO.db
 #' @import org.Hs.eg.db
-#' @import Rgraphviz
 #' @import moalannotgene
 #' @export
 topgo <- function(
     symbollist = NULL, species = "hs", overlapmin = 1,
-    nodegraph = c(5,10), top = 50, annot = FALSE,
+    nodegraph = c(5,10), topena = 50, annot = FALSE,
     path = ".", dirname = NULL )
 {
   i=j=k=1
@@ -113,8 +112,9 @@ topgo <- function(
         # Path %>% file.path(dbDirName0[i], FileName0) -> FileName1
         # goEnrichment4 %>% output(FileName1)
         # barplot
+        # pval ranking
         goEnrichment3 %>% colnames
-        goEnrichment3 %>% dplyr::slice(1:top) -> fgseapval1plot
+        goEnrichment3 %>% dplyr::slice(1:topena) -> fgseapval1plot
         fgseapval1plot %>% colnames
         fgseapval1plot$pval %>% log10 %>% "*"(-1) -> Log10Pval
         fgseapval1plot %>% data.frame(Log10Pval) -> fgseapval1plot2
@@ -133,7 +133,36 @@ topgo <- function(
         fgseapval1plot3$OverlapSize %>% paste("/",fgseapval1plot3$GenesetSize) %>% 
           lapply(paste0,collapse="") %>% unlist -> Overlap
         fgseapval1plot3 %>% data.frame(Overlap) -> fgseapval1plot3
-        fgseapval1plot3 %>% enabarplot(title=dbDirName0[i]) -> p
+        fgseapval1plot3 -> datp
+        # NES ranking
+        goEnrichment3 %>% colnames
+        goEnrichment3 %>% dplyr::arrange( -abs(.data$NES) ) %>% dplyr::slice(1:topena) -> fgseapval1plot
+        # rl5 %>% dplyr::slice(1:topena) -> fgseapval1plot
+        fgseapval1plot %>% colnames
+        fgseapval1plot$pval %>% log10 %>% "*"(-1) -> Log10Pval
+        fgseapval1plot %>% data.frame(Log10Pval) -> fgseapval1plot2
+        # reduce long geneset name
+        fgseapval1plot2$Name %>% as.character %>% nchar -> Nchar0
+        Nchar0 %>% ">"(50) %>% which -> selNchar
+        if(length(selNchar)>0)
+        {
+          fgseapval1plot2$Name[selNchar] %>% substr(1,45) -> Head0
+          fgseapval1plot2$Name[selNchar] %>% substr(Nchar0-10,Nchar0)-> Tail0
+          fgseapval1plot2$Name %>% as.character -> NameNchar0
+          fgseapval1plot2$Name[selNchar] <- paste(Head0,Tail0,sep="...")
+        }
+        fgseapval1plot2 %>% dplyr::mutate(Name=forcats::fct_reorder(.data$Name,Log10Pval)) -> fgseapval1plot3
+        fgseapval1plot3$OverlapSize %>% paste("/",fgseapval1plot3$GenesetSize) %>% 
+          lapply(paste0,collapse="") %>% unlist -> Overlap
+        fgseapval1plot3 %>% data.frame(Overlap) -> fgseapval1plot3
+        fgseapval1plot3 -> datnes
+        datnes %>% head
+        
+        datp %>% enabarplot(datnes=datnes,title=dbDirName0[i]) -> p
+        
+        
+        
+        # fgseapval1plot3 %>% enabarplot(title=dbDirName0[i]) -> p
         paste(dbDirName0[i],"_",nrow(fgseapval1plot3),".pdf",sep = "") -> FileName0
         Path %>% file.path(FileName0) -> FileName1
         ggsave(plot=p,filename=FileName1,width=40,height=30,scale=1,units="cm")

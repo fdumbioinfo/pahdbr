@@ -1,4 +1,4 @@
-#' @title MSigDB enrichment analysis
+#' @title Fonctional analysis benchmark
 #' @description MSigDB enrichment analysis
 #' @param symbollist character Symbol or NCBI gene ID
 #' @param foldchange data.frame Symbol list with fold-change values to display
@@ -6,7 +6,7 @@
 #' @param keywords data.frame keywords list for geneset selection 
 #' @param background numeric
 #' @param overlapmin numeric for minimum overlap between geneset and list
-#' @param top numeric top features to plot
+#' @param topena numeric top features to plot
 #' @param labsize numeric size of function in barplot
 #' @param dpibarplot character barplot resolution
 #' @param dolistnetwork logical create symbollist interaction network 
@@ -25,7 +25,7 @@
 #' @return file with enrichment analysis results
 #' @examples
 #' # not run
-#' # ena124( Symbollist , filtergeneset = "reactome")
+#' # enabench(symbollist , dotopgo , ipafile)
 #' @author Florent Dumont <florent.dumont@universite-paris-saclay.fr>
 #' @importFrom magrittr %>%
 #' @importFrom dplyr mutate arrange select desc
@@ -33,15 +33,17 @@
 #' @importFrom stats fisher.test setNames p.adjust
 #' @importFrom foreach foreach %do% %:%
 #' @importFrom utils capture.output
+#' @importFrom grDevices pdf graphics.off
+#' @importFrom moal venn input annot ena output
 #' @export
 enabench <- function(
     symbollist = NULL, foldchange = NULL, keywords = NULL, species = "hs",
-    background = 25000, overlapmin = 2, top = 50, labsize = 11, dpibarplot = "screen",
+    background = 25000, overlapmin = 2, topena = 50, labsize = 11, dpibarplot = "screen",
     dolistnetwork = TRUE, dogenesetnetwork = FALSE, confidence = 0,
     intmaxdh = 6000, intmax = 10000000, nodesize = 0.39, mings = 5, maxgs = 700,
     dotopgo = TRUE, ipafile = NULL, nodegraph = c(5,10), path = "." , dirname = NULL )
 {
-  i=1
+  i=j=1
   ifelse(is.null(dirname),"ena" -> DirName0,paste("ena_",dirname,sep="") -> DirName0)
   path %>% file.path(DirName0) -> Path0
   if(!dir.exists(Path0)){ Path0 %>% dir.create }
@@ -59,15 +61,15 @@ enabench <- function(
   # -----
   # 1 - MSigDB
   # -----
-  symbollist %>% moal::ena(species=species,dirname="msigdb",mings=mings,maxgs=maxgs,path = Path0)
+  symbollist %>% moal::ena(species=species,dirname="msigdb",mings=mings,topena=topena,maxgs=maxgs,path = Path0)
   # -----
   # 2 - topGO
   # -----
-  if(dotopgo){symbollist %>% topgo(species=species,nodegraph=nodegraph,top=top,annot=F,path=Path0,dirname=NULL)}
+  if(dotopgo){symbollist %>% topgo(species=species,nodegraph=nodegraph,topena=topena,path=Path0,dirname=NULL)}
   # -----
   # 3 - IPA
   # -----
-  if(!is.null(ipafile)){ipafile %>% ipa(top=top,path=Path0,dirname=NULL)}
+  if(!is.null(ipafile)){ipafile %>% ipa(topena=topena,path=Path0,dirname=NULL)}
   #
   # if(dolistnetwork)
   # {
@@ -114,7 +116,7 @@ enabench <- function(
     {
       # pval rank
       l0[j] %>% moal::input(.) -> t
-      t %>% dplyr::slice(1:top) -> tt
+      t %>% dplyr::slice(1:topena) -> tt
       tt %>% colnames %>% grep("SymbolList",.) %>% dplyr::select(tt,.) %>% unlist -> ttt
       ttt %>% strsplit("\\|") %>% unlist -> t1
       # lpeAll %>% dplyr::filter(.data$Collection == Collection0[j]) -> t0
@@ -123,8 +125,8 @@ enabench <- function(
       if( table(t1) %>% length > 1 ){ t1 %>% table %>% sort(decreasing = T) %>% data.frame %>% setNames(c("Symbol","Occ")) -> t2 }
       t2 %>% data.frame("Collection"=rep(Collection1[j],nrow(t2))) -> pvalr
       # NES rank
-      t %>% dplyr::arrange(-.data$NES) %>% dplyr::slice(1:top) -> tt
-      t %>% dplyr::slice(1:top) -> tt
+      t %>% dplyr::arrange(-.data$NES) %>% dplyr::slice(1:topena) -> tt
+      t %>% dplyr::slice(1:topena) -> tt
       tt %>% head
       tt %>% colnames %>% grep("SymbolList",.) %>% dplyr::select(tt,.) %>% unlist -> ttt
       ttt %>% strsplit("\\|") %>% unlist -> t1
@@ -186,7 +188,7 @@ enabench <- function(
     }
     pdf(FileName1)
     par(mar=c(6.1,4.1,4.1,2.1))
-    m5 %>% moal:::hc(m5 %>% colnames %>% as.factor ,legendtitle="Collection",legend=F,cexlabel=0.7)
+    m5 %>% hc(m5 %>% colnames %>% as.factor ,legendtitle="Collection",legend=F,cexlabel=0.7)
     graphics.off()
   } 
 }

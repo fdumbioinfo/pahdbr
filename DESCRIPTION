@@ -1,10 +1,10 @@
 Package: pahdbr
-Title: Enrichment analysis and interaction network
+Title: Pulmonary Arterial hypertrophie database
 Version: 1.0.0
 Authors@R: 
     person("Florent", "Dumont", , "florent.dumont@universite-paris-saclay.fr", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-4439-5070"))
-Description: Enrichment analysis and interaction network.
+Description: Pulmonary Arterial hypertrophie database and enrichment tools to compare two list of Symbol.
 License: GPL-3
 Depends: R (>= 4.3)
 Imports:
@@ -19,19 +19,13 @@ Imports:
   gplots,
   graphics,
   gridExtra,
+  grDevices,
   igraph,
   magrittr,
   methods,
   moal,
   moalannotgene,
-  moalstringdbhs,
-  moalstringdbmm,
-  moalstringdbrn,
-  moalstringdbdr,
-  moalstringdbss, 
   org.Hs.eg.db,
-  parallel,
-  Rgraphviz,
   rlang,
   scales,
   stats,
