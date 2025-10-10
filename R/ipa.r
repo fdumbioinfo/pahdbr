@@ -348,7 +348,7 @@ ipa <- function(
   fgseapval1plot3 %>% data.frame(Overlap) -> fgseapval1plot3
   fgseapval1plot3 -> datnes
   datnes %>% head
-  datp %>% enabarplot(datnes=datnes,title="Pathways") -> p
+  datp %>% enabarplot(datnes=datnes,title="Regulators") -> p
   # fgseapval1plot3 %>% enabarplot(title="Regulators") -> p
   paste("REGULATORS_",topena,".pdf",sep="") -> FileName0
   Path %>% file.path(FileName0) -> FileName1
@@ -453,7 +453,7 @@ ipa <- function(
   fgseapval1plot3 %>% data.frame(Overlap) -> fgseapval1plot3
   fgseapval1plot3 -> datnes
   datnes %>% head
-  datp %>% enabarplot(datnes=datnes,title="Pathways") -> p
+  datp %>% enabarplot(datnes=datnes,title="Functions") -> p
   
   
   
@@ -569,7 +569,7 @@ ipa <- function(
   fgseapval1plot3 -> datnes
   datnes %>% head
   datnes %>% dim
-  datp %>% enabarplot(datnes=datnes,title="Pathways") -> p
+  datp %>% enabarplot(datnes=datnes,title="Diseases") -> p
   
   
   # fgseapval1plot3 %>% enabarplot(title="Diseases") -> p
